@@ -75,4 +75,11 @@ public class BookManager {
         boolean removed = books.removeIf(b -> b.getId() == id);
         System.out.println(removed ? "Book deleted." : "Book not found.");
     }
+        public List<Book> getBooks() {
+        return new ArrayList<>(books); 
+    }
+
+    public Book getBookById(int id) {
+        return books.stream().filter(b -> b.getId() == id).findFirst().orElse(null);
+    }
 }

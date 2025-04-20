@@ -14,7 +14,9 @@ public class Menu {
     private final Scanner scanner = new Scanner(System.in);
     private final BookManager bookManager = new BookManager();
     private final UserManager userManager = new UserManager();
+    private final TransactionManager transactionManager = new TransactionManager(bookManager.getBooks());
 
+    
     public void displayMainMenu() {
         int choice;
         do {
@@ -31,13 +33,13 @@ public class Menu {
                     displayAdminPanel();
                     break;
                 case 2:
-                    System.out.println("Member Panel - Placeholder");
+                    displayMemberPanel();
                     break;
                 case 3:
-                    System.out.println("Notifications - Placeholder");
+                    System.out.println("Notifications ");
                     break;
                 case -1:
-                    System.out.println("Exiting... Goodbye!");
+                    System.out.println("Exiting, goodbye!");
                     break;
                 default:
                     System.out.println("Invalid choice. Try again.");
@@ -61,6 +63,30 @@ public class Menu {
                     break;
                 case 2:
                     userManager.manageUsers();
+                    break;
+                case 0:
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        } while (choice != 0);
+    }
+    private void displayMemberPanel() {
+        int choice;
+        do {
+            System.out.println("\n--- Member Panel ---");
+            System.out.println("1. Borrow / Return Books");
+            System.out.println("2. View My Transactions");
+            System.out.println("0. Return to Main Menu");
+            System.out.print("Enter your choice: ");
+            choice = scanner.nextInt();
+
+            switch (choice) {
+                case 1:
+                    transactionManager.manageTransactions();
+                    break;
+                case 2:
+                    System.out.println("View my Transactions");
                     break;
                 case 0:
                     return;
