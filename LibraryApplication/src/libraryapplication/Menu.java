@@ -87,7 +87,7 @@ public class Menu {
                     transactionManager.manageTransactions();
                     break;
                 case 2:
-                    System.out.println("(To be implemented) View My Transactions");
+                    System.out.println("View My Transactions");
                     break;
                 case 0:
                     return;
