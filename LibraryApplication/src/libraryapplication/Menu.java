@@ -10,8 +10,10 @@ import java.util.Scanner;
  * @author rocmos
  */
 public class Menu {
+
     private final Scanner scanner = new Scanner(System.in);
     private final BookManager bookManager = new BookManager();
+    private final UserManager userManager = new UserManager();
 
     public void displayMainMenu() {
         int choice;
@@ -48,6 +50,7 @@ public class Menu {
         do {
             System.out.println("\n--- Admin Panel ---");
             System.out.println("1. Manage Books");
+            System.out.println("2. Manage Users");
             System.out.println("0. Return to Main Menu");
             System.out.print("Enter your choice: ");
             choice = scanner.nextInt();
@@ -55,6 +58,9 @@ public class Menu {
             switch (choice) {
                 case 1:
                     bookManager.manageBooks();
+                    break;
+                case 2:
+                    userManager.manageUsers();
                     break;
                 case 0:
                     return;
