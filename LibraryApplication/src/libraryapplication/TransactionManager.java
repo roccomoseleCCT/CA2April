@@ -9,19 +9,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
+import java.sql.*;
 
 /**
  * @author rocmos
  */
 public class TransactionManager {
-     private final List<Transaction> transactions = new ArrayList<>();
-    private final List<Book> books; // reference to shared books list
+    private final List<Transaction> transactions = new ArrayList<>();
+    private final List<Book> books;
     private final Scanner scanner = new Scanner(System.in);
 
     public TransactionManager(List<Book> books) {
         this.books = books;
     }
-
     public void manageTransactions() {
         int choice;
         do {
@@ -47,76 +47,88 @@ public class TransactionManager {
     private void borrowBook() {
         System.out.print("Enter Book ID to Borrow: ");
         int bookId = scanner.nextInt();
-        scanner.nextLine();
-
-        Book book = findBookById(bookId);
-        if (book == null || !book.isAvailable()) {
-            System.out.println("Book not available.");
-            return;
-        }
-
         System.out.print("Enter Your User ID: ");
         int userId = scanner.nextInt();
-        scanner.nextLine();
 
-        book.setAvailable(false);
-        Transaction transaction = new Transaction(
-                transactions.size() + 1,
-                bookId,
-                userId,
-                LocalDate.now(),
-                null,
-                "Borrowed"
-        );
-        transactions.add(transaction);
-        System.out.println("Book borrowed successfully.");
+        String sql = "INSERT INTO transactions (book_id, user_id, issue_date, status) VALUES (?, ?, ?, 'Borrowed')";
+        String updateBook = "UPDATE books SET available = FALSE WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                 PreparedStatement updateStmt = conn.prepareStatement(updateBook)) {
+
+                stmt.setInt(1, bookId);
+                stmt.setInt(2, userId);
+                stmt.setDate(3, Date.valueOf(LocalDate.now()));
+                stmt.executeUpdate();
+
+                updateStmt.setInt(1, bookId);
+                updateStmt.executeUpdate();
+
+                conn.commit();
+                System.out.println("Book borrowed successfully.");
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private void returnBook() {
         System.out.print("Enter Book ID to Return: ");
         int bookId = scanner.nextInt();
-        scanner.nextLine();
+        System.out.print("Enter Your User ID: ");
+        int userId = scanner.nextInt();
 
-        Optional<Transaction> optional = transactions.stream()
-                .filter(t -> t.getBookId() == bookId && t.getReturnDate() == null)
-                .findFirst();
+        String sql = "UPDATE transactions SET return_date = ?, status = 'Returned' WHERE book_id = ? AND user_id = ? AND status = 'Borrowed'";
+        String updateBook = "UPDATE books SET available = TRUE WHERE id = ?";
 
-        if (optional.isEmpty()) {
-            System.out.println("No active borrow transaction found.");
-            return;
+        try (Connection conn = DatabaseConnection.getInstance().getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                 PreparedStatement updateStmt = conn.prepareStatement(updateBook)) {
+
+                stmt.setDate(1, Date.valueOf(LocalDate.now()));
+                stmt.setInt(2, bookId);
+                stmt.setInt(3, userId);
+                stmt.executeUpdate();
+
+                updateStmt.setInt(1, bookId);
+                updateStmt.executeUpdate();
+
+                conn.commit();
+                System.out.println("Book returned successfully.");
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-
-        Transaction transaction = optional.get();
-        transaction.setReturnDate(LocalDate.now());
-        transaction.setStatus("Returned");
-
-        Book book = findBookById(bookId);
-        if (book != null) {
-            book.setAvailable(true);
-        }
-
-        System.out.println("Book returned successfully.");
     }
 
     private void viewTransactions() {
-        if (transactions.isEmpty()) {
-            System.out.println("No transactions available.");
-        } else {
-            for (Transaction t : transactions) {
-                System.out.println("Transaction ID: " + t.getTransactionId() +
-                        ", Book ID: " + t.getBookId() +
-                        ", User ID: " + t.getUserId() +
-                        ", Issued: " + t.getIssueDate() +
-                        ", Returned: " + t.getReturnDate() +
-                        ", Status: " + t.getStatus());
-            }
-        }
-    }
+        String sql = "SELECT * FROM transactions";
 
-    private Book findBookById(int id) {
-        for (Book b : books) {
-            if (b.getId() == id) return b;
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                System.out.printf("Transaction %d: Book %d - User %d | Issued: %s | Returned: %s | Status: %s\n",
+                        rs.getInt("id"),
+                        rs.getInt("book_id"),
+                        rs.getInt("user_id"),
+                        rs.getDate("issue_date"),
+                        rs.getDate("return_date"),
+                        rs.getString("status"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return null;
     }
 }

@@ -18,7 +18,7 @@ public class DatabaseConnection {
 
     private static DatabaseConnection instance;
     private Connection connection;
-    private final String url = "jdbc:mysql://localhost:3306/library";
+    private final String url = "jdbc:mysql://localhost:3306/library_db";
     private final String user = "root";
     private final String password = "";
 

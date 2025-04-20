@@ -7,14 +7,14 @@ package libraryapplication;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.sql.*;
 
 /**
  * @author rocmos
  */
 public class UserManager {
 
-    private final List<User> users = new ArrayList<>();
-    private final Scanner scanner = new Scanner(System.in);
+     private final Scanner scanner = new Scanner(System.in);
 
     public void manageUsers() {
         int choice;
@@ -30,18 +30,12 @@ public class UserManager {
             scanner.nextLine();
 
             switch (choice) {
-                case 1 ->
-                    addUser();
-                case 2 ->
-                    viewUsers();
-                case 3 ->
-                    searchUser();
-                case 4 ->
-                    deleteUser();
-                case 0 ->
-                    System.out.println("Returning to Admin Panel...");
-                default ->
-                    System.out.println("Invalid option.");
+                case 1 -> addUser();
+                case 2 -> viewUsers();
+                case 3 -> searchUser();
+                case 4 -> deleteUser();
+                case 0 -> System.out.println("Returning to Admin Panel...");
+                default -> System.out.println("Invalid option.");
             }
         } while (choice != 0);
     }
@@ -49,37 +43,71 @@ public class UserManager {
     private void addUser() {
         System.out.print("Enter Name: ");
         String name = scanner.nextLine();
-        System.out.print("Enter Email: ");
-        String email = scanner.nextLine();
         System.out.print("Enter Role (Admin/Member): ");
         String role = scanner.nextLine();
 
-        int id = users.size() + 1;
-        User user = UserFactory.createUser(role, id, name, email);
-        users.add(user);
-        System.out.println("User added successfully.");
+        String sql = "INSERT INTO users (name, role) VALUES (?, ?)";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, name);
+            stmt.setString(2, role);
+            stmt.executeUpdate();
+            System.out.println("User added successfully.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private void viewUsers() {
-        if (users.isEmpty()) {
-            System.out.println("No users available.");
-        } else {
-            users.forEach(u -> System.out.println("[" + u.id + "] " + u.name + " - " + u.role));
+        String sql = "SELECT * FROM users";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                System.out.printf("[%d] %s - %s\n",
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("role"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     private void searchUser() {
         System.out.print("Enter Name to Search: ");
-        String name = scanner.nextLine().toLowerCase();
-        users.stream()
-                .filter(u -> u.name.toLowerCase().contains(name))
-                .forEach(u -> System.out.println("[" + u.id + "] " + u.name + " - " + u.role));
+        String search = scanner.nextLine();
+        String sql = "SELECT * FROM users WHERE name LIKE ?";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, "%" + search + "%");
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                System.out.printf("[%d] %s - %s\n",
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("role"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private void deleteUser() {
         System.out.print("Enter User ID to Delete: ");
         int id = scanner.nextInt();
-        boolean removed = users.removeIf(u -> u.id == id);
-        System.out.println(removed ? "User deleted." : "User not found.");
+
+        String sql = "DELETE FROM users WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            int rows = stmt.executeUpdate();
+            System.out.println(rows > 0 ? "User deleted." : "User not found.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
