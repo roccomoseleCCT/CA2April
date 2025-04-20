@@ -11,6 +11,7 @@ import java.util.Scanner;
  */
 public class Menu {
     private final Scanner scanner = new Scanner(System.in);
+    private final BookManager bookManager = new BookManager();
 
     public void displayMainMenu() {
         int choice;
@@ -25,20 +26,41 @@ public class Menu {
 
             switch (choice) {
                 case 1:
-                    System.out.println("Admin Panel ");
+                    displayAdminPanel();
                     break;
                 case 2:
-                    System.out.println("Member Panel ");
+                    System.out.println("Member Panel - Placeholder");
                     break;
                 case 3:
-                    System.out.println("Notifications ");
+                    System.out.println("Notifications - Placeholder");
                     break;
                 case -1:
-                    System.out.println("Exiting, goodbye!");
+                    System.out.println("Exiting... Goodbye!");
                     break;
                 default:
                     System.out.println("Invalid choice. Try again.");
             }
         } while (choice != -1);
+    }
+
+    private void displayAdminPanel() {
+        int choice;
+        do {
+            System.out.println("\n--- Admin Panel ---");
+            System.out.println("1. Manage Books");
+            System.out.println("0. Return to Main Menu");
+            System.out.print("Enter your choice: ");
+            choice = scanner.nextInt();
+
+            switch (choice) {
+                case 1:
+                    bookManager.manageBooks();
+                    break;
+                case 0:
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        } while (choice != 0);
     }
 }
