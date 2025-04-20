@@ -14,9 +14,9 @@ public class Menu {
     private final Scanner scanner = new Scanner(System.in);
     private final BookManager bookManager = new BookManager();
     private final UserManager userManager = new UserManager();
-    private final TransactionManager transactionManager = new TransactionManager(bookManager.getBooks());
+    private final TransactionManager transactionManager = new TransactionManager();
+    private final NotificationService notificationService = new NotificationService();
 
-    
     public void displayMainMenu() {
         int choice;
         do {
@@ -36,10 +36,10 @@ public class Menu {
                     displayMemberPanel();
                     break;
                 case 3:
-                    System.out.println("Notifications ");
+                    notificationService.checkOverdueBooks();
                     break;
                 case -1:
-                    System.out.println("Exiting, goodbye!");
+                    System.out.println("Exiting... Goodbye!");
                     break;
                 default:
                     System.out.println("Invalid choice. Try again.");
@@ -71,6 +71,7 @@ public class Menu {
             }
         } while (choice != 0);
     }
+
     private void displayMemberPanel() {
         int choice;
         do {
@@ -86,7 +87,7 @@ public class Menu {
                     transactionManager.manageTransactions();
                     break;
                 case 2:
-                    System.out.println("View my Transactions");
+                    System.out.println("(To be implemented) View My Transactions");
                     break;
                 case 0:
                     return;

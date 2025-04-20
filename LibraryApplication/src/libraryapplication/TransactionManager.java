@@ -16,12 +16,9 @@ import java.sql.*;
  */
 public class TransactionManager {
     private final List<Transaction> transactions = new ArrayList<>();
-    private final List<Book> books;
     private final Scanner scanner = new Scanner(System.in);
 
-    public TransactionManager(List<Book> books) {
-        this.books = books;
-    }
+
     public void manageTransactions() {
         int choice;
         do {
